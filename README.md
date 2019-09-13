@@ -9,6 +9,8 @@ Capabilities:
 
 ## POI enrichment
 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.3407123.svg)](https://doi.org/10.5281/zenodo.3407123)
+
 Comparison of various distributed implementations of a spatial join for point of interest enrichment.
 
 Results:
