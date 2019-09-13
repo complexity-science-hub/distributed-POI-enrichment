@@ -1,0 +1,13 @@
+description = 'reusable legobricks'
+dependencies {
+    compile deps.pureConfig
+    compile deps.pureConfigEnumeratum
+    compile deps.enumeratum
+
+    compile deps.geospark
+    compile deps.geosparkSql
+    compile deps.geomesaSparkSql
+
+    compile deps.rtree2d
+    compile deps.osLib
+}

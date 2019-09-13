@@ -1,0 +1,5 @@
+rootProject.name = 'spark-mobility'
+
+include ':data-generator'
+include ':benchmark-spark'
+include ':common-modules'

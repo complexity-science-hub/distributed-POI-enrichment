@@ -1,0 +1,4 @@
+description = 'generate data for evaluation or local development'
+dependencies {
+        implementation project(':common-modules')
+}

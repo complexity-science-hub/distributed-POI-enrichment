@@ -1,0 +1,5 @@
+description = 'spark benchmark'
+dependencies {
+    implementation project(':common-modules')
+    implementation deps.scalaC
+}

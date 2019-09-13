@@ -1,0 +1,7 @@
+This project is MIT licensed.
+
+Additionally Licenses apply from:
+- https://github.com/locationtech/geomesa    Apache 2.0
+- https://github.com/DataSystemsLab/GeoSpark MIT
+- Hortonworks Hadoop Plattform (mostly Apache 2.0)
+- https://github.com/uber/kepler.gl MIT

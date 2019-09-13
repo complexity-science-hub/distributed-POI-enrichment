@@ -1,0 +1,230 @@
+description = 'Spark mobility analytics toolkit.'
+
+buildscript {
+    repositories {
+        maven { url "https://plugins.gradle.org/m2/" }
+        jcenter()
+    }
+    dependencies {
+        classpath "com.github.jengelman.gradle.plugins:shadow:$shadowPluginV"
+        classpath "gradle.plugin.com.github.maiflai:gradle-scalatest:$scalatestPluginV"
+        classpath "com.diffplug.spotless:spotless-plugin-gradle:${spotlessPluginV}"
+        classpath "pl.allegro.tech.build:axion-release-plugin:$releasePluginV"
+    }
+}
+
+// only in root project
+apply plugin: "pl.allegro.tech.build.axion-release"
+
+allprojects {
+    group = 'at.csh.geoheil.mobility'
+    scmVersion {
+        // problems with JGIT and authorization, manually use git CLI in build script
+        localOnly = true
+        tag {
+            prefix = 'v'
+            versionSeparator = ''
+        }
+        checks {
+            aheadOfRemote = false
+        }
+    }
+    version = scmVersion.uncachedVersion.decoratedVersion
+
+    ext {
+        scalaFullV = "${scalaMinorV}.$scalaPatchV"
+        sparkFullV = "$sparkOpenV.$sparkOpenVPatch"
+        sparkTestingBaseV = "${sparkOpenV}.${sparkOpenVPatch}_${sparkTestingBaseNonSparkV}"
+
+        deps = [rtree2d             : "com.github.plokhotnyuk.rtree2d:rtree2d-core_${scalaMinorV}:$rtree2dV",
+                geomesaSparkSql     : "org.locationtech.geomesa:geomesa-spark-sql_${scalaMinorV}:$geomesaV",
+                geospark            : "org.datasyslab:geospark:$geosparkV",
+                geosparkSql         : "org.datasyslab:geospark-sql_$sparkOpenV:$geosparkV",
+                pureConfig          : "com.github.pureconfig:pureconfig_$scalaMinorV:$pureconfigV",
+                pureConfigEnumeratum: "com.github.pureconfig:pureconfig-enumeratum_$scalaMinorV:$pureconfigV",
+                enumeratum          : "com.beachape:enumeratum_${scalaMinorV}:$enumeratumV",
+                rtree2d             : "com.github.plokhotnyuk.rtree2d:rtree2d-core_2.11:$rtree2dV",
+                osLib               : "com.lihaoyi:os-lib_${scalaMinorV}:$osLibV",
+                scalaT              : "org.scalatest:scalatest_${scalaMinorV}:$scalatestV",
+                pgdown              : "org.pegdown:pegdown:$pgdownV",
+                scalaC              : "org.scalacheck:scalacheck_${scalaMinorV}:$scalaCheckV",
+                sparkTestingB       : "com.holdenkarau:spark-testing-base_${scalaMinorV}:$sparkTestingBaseV",
+                sparkCore           : "org.apache.spark:spark-core_${scalaMinorV}:$sparkFullV",
+                sparkSql            : "org.apache.spark:spark-sql_${scalaMinorV}:$sparkFullV",
+                sparkHive           : "org.apache.spark:spark-hive_${scalaMinorV}:$sparkFullV",
+                sparkMllib          : "org.apache.spark:spark-mllib_${scalaMinorV}:$sparkFullV",
+                scalaLib            : "org.scala-lang:scala-library:$scalaFullV"
+        ]
+
+        subProjectsNotToBePublished = []
+    }
+
+    ext.ARTIFACT_STORE_PASSWORD = project.hasProperty('artifact_store_password_var') ? project.getProperty('artifact_store_password_var') : ''
+    ext.ARTIFACT_STORE_USER = project.hasProperty('artifact_store_user_var') ? project.getProperty('artifact_store_user_var') : ''
+    ext.ARTIFACT_STORE_URL = project.hasProperty('artifact_store_url_var') ? project.getProperty('artifact_store_url_var') : ''
+    ext.ARTIFACT_STORE_SNAPSHOT_URL = project.hasProperty('artifact_store_snapshot_url_var') ? project.getProperty('artifact_store_snapshot_url_var') : ''
+
+    configurations.all {
+        exclude group: 'xerces', module: 'xercesImpl'
+        exclude group: 'redis.clients', module: 'jedis'
+        exclude group: 'org.apache.hbase'
+        exclude group: 'org.locationtech.geomesa', module: 'geomesa-convert-redis-cache'
+
+    }
+
+    repositories {
+        maven { url "https://repo.locationtech.org/content/groups/releases" }
+        maven { url "http://repo.boundlessgeo.com/main" }
+        maven { url "http://download.osgeo.org/webdav/geotools" }
+        maven { url "http://conjars.org/repo" }
+        jcenter()
+        maven { url "http://nexus-private.hortonworks.com/nexus/content/groups/public" }
+    }
+
+}
+
+subprojects { subproject ->
+    apply plugin: 'scala'
+    apply plugin: 'com.diffplug.gradle.spotless'
+    apply plugin: 'com.github.johnrengelman.shadow'
+    apply plugin: 'com.github.maiflai.scalatest'
+
+    if (!(subproject.name in subProjectsNotToBePublished)) {
+        apply plugin: 'maven-publish'
+        publishing {
+            publications {
+                mavenJava(MavenPublication) {
+                    from components.java
+                    // publish fat jar additionally which is deployed to PROD
+                    artifact shadowJar
+
+                    pom {
+                        name = 'spark-mobility'
+                        description = 'scalable mobility analytics on spark'
+                        licenses {
+                            license {
+                                name = 'MIT'
+                            }
+                        }
+                    }
+                }
+            }
+            repositories {
+                maven {
+                    credentials {
+                        username ARTIFACT_STORE_USER
+                        password ARTIFACT_STORE_PASSWORD
+                    }
+                    if (version.endsWith('-SNAPSHOT')) {
+                        url ARTIFACT_STORE_SNAPSHOT_URL
+                    } else {
+                        url ARTIFACT_STORE_URL
+                    }
+                }
+            }
+        }
+    }
+
+    sourceCompatibility = 1.8
+    targetCompatibility = 1.8
+
+    dependencies {
+
+        compileOnly deps.sparkCore
+        compileOnly deps.sparkSql
+        compileOnly deps.sparkHive
+        compileOnly deps.sparkMllib
+        compileOnly deps.scalaLib
+
+        testImplementation deps.scalaT
+        testRuntime deps.pgdown
+        testImplementation deps.scalaC
+        testImplementation deps.sparkTestingB
+
+    }
+
+    configurations {
+        testCompile.extendsFrom compileOnly
+    }
+
+
+    test {
+        maxParallelForks = 1
+        // fix overly long classpath which is causing problems on windows
+        doFirst {
+            if (org.apache.commons.lang.SystemUtils.IS_OS_WINDOWS) {
+                def cp = org.gradle.util.CollectionUtils.join(File.pathSeparator, classpath.getFiles())
+                environment 'CLASSPATH', cp
+                classpath = classpath.filter { false }
+            }
+        }
+    }
+
+    shadowJar {
+        zip64 true
+        dependencies {
+            exclude(dependency("com.chuusai:shapeless_$scalaMinorV"))
+        }
+        exclude 'META-INF/*.DSA'
+        exclude 'META-INF/*.RSA'
+        exclude 'META-INF/LICENSE'
+        exclude 'META-INF/LICENSE.txt'
+        exclude 'META-INF/NOTICE.txt'
+        exclude 'META-INF/NOTICE'
+        exclude 'NOTICE'
+        exclude 'LICENSE'
+        exclude 'LICENSE.txt'
+        exclude 'LICENSE-2.0.txt'
+        exclude 'webapps'
+        exclude 'w3c'
+        exclude 'lib/README.txt'
+        exclude 'core-default.xml'
+        exclude 'mapred-default.xml'
+        exclude 'casevariants.xml'
+        exclude 'categories.xml'
+        exclude 'Doxyfile'
+        exclude 'about.html'
+        exclude 'yarn-default.xml'
+        exclude 'yarn-version-info.properties'
+        exclude 'jump-workbench-properties.xml'
+    }
+
+    spotless {
+        scala {
+            scalafmt()
+            licenseHeader('// Copyright (C) $YEAR Georg Heiler', 'package ')
+        }
+    }
+
+    tasks.withType(ScalaCompile) {
+        scalaCompileOptions.additionalParameters = [
+                "-target:jvm-1.8",
+                "-feature",
+                "-unchecked",
+                "-deprecation",
+                "-Xfuture",
+                "-Xlint:missing-interpolator",
+                "-Yno-adapted-args",
+                "-Ywarn-dead-code",
+                "-Ywarn-numeric-widen",
+                "-Ywarn-value-discard",
+                "-Ywarn-unused"]
+    }
+
+    clean.doFirst {
+        // cleanup folder generated from running test cases in Intellij
+        delete "${projectDir}/out/"
+    }
+}
+
+task printVersionName {
+    doLast {
+        println version
+    }
+}
+
+task rootProjectName {
+    doLast {
+        println rootProject.name
+    }
+}
