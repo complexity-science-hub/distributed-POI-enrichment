@@ -1,0 +1,24 @@
+@article{Zaharia2012,
+abstract = {We present Resilient Distributed Datasets (RDDs), a distributed memory abstraction that lets programmers perform in-memory computations on large clusters in a fault-tolerant manner. RDDs are motivated by two types of applications that current computing frameworks handle inefficiently: iterative algorithms and interactive data mining tools. In both cases, keeping data in memory can improve performance by an order of magnitude. To achieve fault tolerance efficiently, RDDs provide a restricted form of shared memory, based on coarse-grained transformations rather than fine-grained updates to shared state. However, we show that RDDs are expressive enough to capture a wide class of computations, including recent specialized programming models for iterative jobs, such as Pregel, and new applications that these models do not capture. We have implemented RDDs in a system called Spark, which we evaluate through a variety of user applications and benchmarks.},
+author = {Zaharia, Matei and Chowdhury, Mosharaf and Das, Tathagata and Dave, Ankur},
+doi = {10.1111/j.1095-8649.2005.00662.x},
+issn = {00221112},
+journal = {NSDI'12 Proceedings of the 9th USENIX conference on Networked Systems Design and Implementation},
+pmid = {2011},
+title = {{Resilient distributed datasets: A fault-tolerant abstraction for in-memory cluster computing}},
+year = {2012}
+}
+@article{Yu2019,
+abstract = {The paper presents the details of designing and developing GEOSPARK, which extends the core engine of Apache Spark and SparkSQL to support spatial data types, indexes, and geometrical operations at scale. The paper also gives a detailed analysis of the technical challenges and opportunities of extending Apache Spark to support state-of-the-art spatial data partitioning techniques: uniform grid, R-tree, Quad-Tree, and KDB-Tree. The paper also shows how building local spatial indexes, e.g., R-Tree or Quad-Tree, on each Spark data partition can speed up the local computation and hence decrease the overall runtime of the spatial analytics program. Furthermore, the paper introduces a comprehensive experiment analysis that surveys and experimentally evaluates the performance of running de-facto spatial operations like spatial range, spatial K-Nearest Neighbors (KNN), and spatial join queries in the Apache Spark ecosystem. Extensive experiments on real spatial datasets show that GEOSPARK achieves up to two orders of magnitude faster run time performance than existing Hadoop-based systems and up to an order of magnitude faster performance than Spark-based systems.},
+author = {Yu, Jia and Zhang, Zongsi and Sarwat, Mohamed},
+doi = {10.1007/s10707-018-0330-9},
+file = {::},
+issn = {13846175},
+journal = {GeoInformatica},
+keywords = {Big geospatial data,Distributed computing,Spatial databases},
+number = {1},
+pages = {37--78},
+title = {{Spatial data management in Apache Spark: the GeoSpark perspective and beyond}},
+volume = {23},
+year = {2019}
+}
