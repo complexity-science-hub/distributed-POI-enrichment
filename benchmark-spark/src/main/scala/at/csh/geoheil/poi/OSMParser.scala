@@ -25,7 +25,7 @@ object OSMParser {
       tagFilters: Map[String, Seq[String]],
       additionalColumns: Map[String, String])(
       implicit spark: SparkSession): DataFrame = {
-    val (node) = OSMRawProvider.provideAndFilter(osmConfig)
+    val (node) = OSMRawProvider.provide(osmConfig)
 
     val combinedAdditionalColumns = additionalColumns ++ tagFilters.map(e =>
       (e._1, e._1))
@@ -34,7 +34,7 @@ object OSMParser {
       .filter(generateFilterCondition(tagFilters))
       .transform(addAdditionalColumns(combinedAdditionalColumns))
       .drop(OSMNode.timestamp, OSMNode.version)
-      .drop(OSMNode.tags, OSMNode.outputPartitionCol)
+      .drop(OSMNode.tags)
   }
 
   private def generateFilterCondition(

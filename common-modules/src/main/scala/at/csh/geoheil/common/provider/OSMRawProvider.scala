@@ -7,15 +7,6 @@ import at.csh.geoheil.common.transformer.io.{IO, PartitionTools}
 import org.apache.spark.sql.{DataFrame, SparkSession}
 
 object OSMRawProvider {
-
-  def provideAndFilter(c: OSMRawConfiguration)(
-      implicit spark: SparkSession): (DataFrame) = {
-    val (node) = provide(c)
-    val nodeFiltered = node.transform(
-      PartitionTools.filterPartition(OSMNode.outputPartitionCol, c.osmNode))
-    (nodeFiltered)
-  }
-
   def provide(c: OSMRawConfiguration)(
       implicit spark: SparkSession): DataFrame = {
     val node = IO
