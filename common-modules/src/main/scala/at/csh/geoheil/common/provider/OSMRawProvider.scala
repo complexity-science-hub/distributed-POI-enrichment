@@ -9,20 +9,15 @@ import org.apache.spark.sql.{DataFrame, SparkSession}
 object OSMRawProvider {
 
   def provideAndFilter(c: OSMRawConfiguration)(
-      implicit spark: SparkSession): (DataFrame, DataFrame, DataFrame) = {
-    val (node, way, relation) = provide(c)
+      implicit spark: SparkSession): (DataFrame) = {
+    val (node) = provide(c)
     val nodeFiltered = node.transform(
       PartitionTools.filterPartition(OSMNode.outputPartitionCol, c.osmNode))
-    val wayFiltered = way.transform(
-      PartitionTools.filterPartition(OSMWay.outputPartitionCol, c.osmWay))
-    val relationFiltered = relation.transform(
-      PartitionTools.filterPartition(OSMRelation.outputPartitionCol,
-                                     c.osmRelation))
-    (nodeFiltered, wayFiltered, relationFiltered)
+    (nodeFiltered)
   }
 
   def provide(c: OSMRawConfiguration)(
-      implicit spark: SparkSession): (DataFrame, DataFrame, DataFrame) = {
+      implicit spark: SparkSession): DataFrame = {
     val node = IO
       .readPrefixedParquetFile(c.osmNode)
       .withColumnRenamed("latitude", OSMNode.yLatWgs84)
@@ -35,28 +30,6 @@ object OSMRawProvider {
         OSMNode.xLongWgs84,
         OSMNode.yLatWgs84
       )
-
-    val way = IO
-      .readPrefixedParquetFile(c.osmWay)
-      .select(
-        OSMWay.id,
-        OSMWay.version,
-        OSMWay.timestamp,
-        OSMWay.tags,
-        OSMWay.nodes,
-        OSMWay.outputPartitionCol
-      )
-
-    val relation = IO
-      .readPrefixedParquetFile(c.osmRelation)
-      .select(
-        OSMRelation.id,
-        OSMRelation.version,
-        OSMRelation.timestamp,
-        OSMRelation.tags,
-        OSMRelation.members,
-        OSMRelation.outputPartitionCol
-      )
-    (node, way, relation)
+    node
   }
 }
