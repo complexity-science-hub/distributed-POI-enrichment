@@ -117,10 +117,10 @@ run-yarn-benchmark-poi:
 	--master yarn \
 	--deploy-mode cluster \
 	--driver-memory 10G \
-	--executor-memory 25G \
-	--num-executors 40 \
+	--executor-memory 55G \
+	--num-executors 80 \
 	--conf spark.stage.maxConsecutiveAttempts=20 \
-	--conf spark.driver.maxResultSize=9g \
+	--conf spark.driver.maxResultSize=9G \
 	--conf spark.yarn.maxAppAttempts=1 \
 	--conf 'spark.serializer=org.apache.spark.serializer.JavaSerializer' \
 	--files /usr/hdp/current/spark2-client/conf/hive-site.xml,configuration/poi_enrichment_benchmark.conf \

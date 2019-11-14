@@ -82,10 +82,12 @@ object PoiEnrichmentBenchmark
         (kv._1, avg(values), medianCalculator(values))
       })
     stats.foreach(println)
-    IO.writeParquet(resultThisIteration.toDS.toDF.repartition(1),
-                    "results/results_for_iteration.parquet",
-                    SaveMode.Append,
-                    Some(Seq("load")))
+    IO.writeParquet(
+      resultThisIteration.toDS.toDF.repartition(1),
+      s"results/results_for_iteration.parquet/base_events_per_user=${c.poiBenchmark.baseNumberOfEvents}}",
+      SaveMode.Append,
+      Some(Seq("load"))
+    )
     resultThisIteration
   })
 
@@ -104,10 +106,11 @@ object PoiEnrichmentBenchmark
 
     // using spark & parquet. IT is simpler than manually serializing JSONs and worring about local vs. HDFS file writes
     val res = resultsComplete.flatten.toDS.toDF.flattenSchema()
-    IO.writeParquet(res.repartition(1),
-                    "results/current_results.parquet",
-                    SaveMode.Overwrite,
-                    None)
+    IO.writeParquet(
+      res.repartition(1),
+      s"results/current_results.parquet/base_events_per_user=${c.poiBenchmark.baseNumberOfEvents}}",
+      SaveMode.Overwrite,
+      None)
     // write to JSON file
 //    import org.json4s._
 //    import org.json4s.jackson.Serialization.write
