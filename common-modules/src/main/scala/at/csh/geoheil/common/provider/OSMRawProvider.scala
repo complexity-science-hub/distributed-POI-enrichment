@@ -33,8 +33,7 @@ object OSMRawProvider {
         OSMNode.timestamp,
         OSMNode.tags,
         OSMNode.xLongWgs84,
-        OSMNode.yLatWgs84,
-        OSMNode.outputPartitionCol
+        OSMNode.yLatWgs84
       )
 
     val way = IO
