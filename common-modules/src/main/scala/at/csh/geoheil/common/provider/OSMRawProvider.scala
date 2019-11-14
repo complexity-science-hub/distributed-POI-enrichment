@@ -25,6 +25,8 @@ object OSMRawProvider {
       implicit spark: SparkSession): (DataFrame, DataFrame, DataFrame) = {
     val node = IO
       .readPrefixedParquetFile(c.osmNode)
+      .withColumnRenamed("latitude", OSMNode.yLatWgs84)
+      .withColumnRenamed("longitude", OSMNode.xLongWgs84)
       .select(
         OSMNode.id,
         OSMNode.version,
