@@ -84,7 +84,7 @@ object PoiEnrichmentBenchmark
     stats.foreach(println)
     IO.writeParquet(
       resultThisIteration.toDS.toDF.repartition(1),
-      s"results/results_for_iteration.parquet/base_events_per_user=${c.poiBenchmark.baseNumberOfEvents}}",
+      s"results/results_for_iteration.parquet/base_events_per_user=${c.poiBenchmark.baseNumberOfEvents}",
       SaveMode.Append,
       Some(Seq("load"))
     )
@@ -108,7 +108,7 @@ object PoiEnrichmentBenchmark
     val res = resultsComplete.flatten.toDS.toDF.flattenSchema()
     IO.writeParquet(
       res.repartition(1),
-      s"results/current_results.parquet/base_events_per_user=${c.poiBenchmark.baseNumberOfEvents}}",
+      s"results/current_results.parquet/base_events_per_user=${c.poiBenchmark.baseNumberOfEvents}",
       SaveMode.Overwrite,
       None)
     // write to JSON file
