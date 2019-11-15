@@ -40,9 +40,9 @@
 \def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
     T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
     
-\usepackage{tikz}
+%\usepackage{tikz}
 
-\newcommand{\mycaption}[1]{\stepcounter{figure}\raisebox{-7pt}
+\newcommand{\mycaption}[1]{\stepcounter{figure}%\raisebox{-7pt}
   {\footnotesize Fig. \thefigure.\hspace{3pt} #1}}
 \begin{document}
 
@@ -313,7 +313,8 @@ We compare the computational speed of various distributed spatial join implement
 \begin{figure*}
 %\tikz \draw [black] (0,0) rectangle (\linewidth,1cm);
 \centering\includegraphics[width=\linewidth]{images/line_white_log_200_True.png}
-\centering\mycaption{load of users (x axis), processing time as average of 5 runs in logarithmic scale (y axis)}
+%\centering\mycaption{load of users (x axis), processing time as average of 5 runs in logarithmic scale (y axis)}
+\centering\caption{load of users (x axis), processing time as average of 5 runs in logarithmic scale (y axis)}
 \label{fig:results}
 \end{figure*}
 
