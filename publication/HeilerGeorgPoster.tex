@@ -1,0 +1,93 @@
+\documentclass[a4paper]{article}
+\usepackage{better_poster}
+
+
+% ---- fill in from here
+
+% authors
+\title{Comparing Implementation Variants Of Distributed Spatial Join On Spark}
+\author{Georg Heiler, Allan Hanbury}
+
+% type of poster: [exp]erimental results, [methods], [theory]
+% Disclaimer: the original classification had "study" and "intervention" as separate categories. I group them under experimental results.
+\newcommand\postertype{exp} % [exp],[methods],[theory]
+
+\begin{document}
+
+% main point of your study
+\makefinding{
+\textbf{Broadcast spatial join} \textbf{faster} than distributed spatial join.
+}
+
+
+% \makemain{
+% }{
+
+% }
+
+
+% the main text of your poster goes here
+%\makemain{
+    % you can have 1 or 2 columns
+    \raggedcolumns
+    \begin{multicols}{2}
+        \section{Intro}
+        \begin{compactitem}
+            \item Just give some context
+            \item No need to cite papers
+            \item because people can download your paper
+        \end{compactitem}
+        
+        \section{Methods}
+        \begin{compactitem}
+            \item N = 30
+            \item Some math: $w_1 = \epsilon$
+            \item Collected this
+            \item Tested with X statistical test
+        \end{compactitem}
+        
+    % this determines where your columns will be separated
+    \columnbreak
+
+        \section{Results}
+        
+        %\includegraphics[width=\linewidth]{icons8-ecg-96.png}
+        \includegraphics[width=\linewidth]{images/log_plot.png}
+        %\begin{figure}
+		%    \centering
+		%    \includegraphics[height=\linewidth]{images/log_plot.png}
+		%    \caption{load of users (x axis), processing time as average of 5 runs in logarithmic scale (y axis)}
+	%	    \label{fig:results}
+
+		%\end{figure}
+        \begin{compactitem}
+            \item Your
+            \item Talking
+            \item Points
+        \end{compactitem}
+    
+    \end{multicols}
+%}
+% If you have extra figures or data to show
+%\makeextracolumn{
+%    Add your things here
+%    
+%    \includegraphics[width=0.5\linewidth]{icons8-stocks-80.png}\includegraphics[width=0.5\linewidth]{icons8-stocks-80.png}
+%    
+%    \begin{itemize}
+%    \setlength\itemsep{0.1em}
+%        \item Stuff you don't want to forget
+%        \item But is not essential
+%    \end{itemize}
+%}
+
+% footer
+% generate qr code from https://www.qr-code-generator.com/ and replace qr_code.png
+% default: barcode on the left
+%\makefooter{images/uni_logo.png}{images/qr-code.png}
+\makefooter{images/uni_logo.jpg}{images/qr-code.png}
+
+% replace with this like for barcode on the right
+%\makealtfooter{images/uni_logo.png}{images/qr-code.png}
+ 
+\end{document}

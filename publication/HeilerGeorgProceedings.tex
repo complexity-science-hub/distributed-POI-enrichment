@@ -4,7 +4,7 @@
 %\usepackage{cite}
 \usepackage[backend=biber,firstinits=true,citestyle=ieee]{biblatex} 
 %https://texblog.org/2012/08/29/changing-the-font-size-in-latex/
-\renewcommand*{\bibfont}{\tiny}
+%\renewcommand*{\bibfont}{\tiny}
 %\renewcommand*{\bibfont}{\scriptsize}
 \addbibresource{library.bib}
 
@@ -39,6 +39,11 @@
 \usepackage{xcolor}
 \def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
     T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
+    
+\usepackage{tikz}
+
+\newcommand{\mycaption}[1]{\stepcounter{figure}\raisebox{-7pt}
+  {\footnotesize Fig. \thefigure.\hspace{3pt} #1}}
 \begin{document}
 
 \title{Comparing Implementation Variants Of Distributed Spatial Join On Spark\\
@@ -48,25 +53,25 @@
 }
 
 \author{
-%\IEEEauthorblockN{1\textsuperscript{st} Georg Heiler}
-%\IEEEauthorblockA{
+\IEEEauthorblockN{1\textsuperscript{st} Georg Heiler}
+\IEEEauthorblockA{
 %%\textit{dept. name of organization (of Aff.)} \\
-%\textit{Complexity Science Hub}\\
-%Vienna, Austria \\
-%georg.heiler@csh.ac.at}
-%\and
-%\IEEEauthorblockN{2\textsuperscript{nd} Allan Hanbury}
-%\IEEEauthorblockA{\textit{E-Commerce Group} \\
-%\textit{TU Wien}\\
-%Vienna, Austria \\
-%allan.hanbury@tuwien.ac.at}
+\textit{Complexity Science Hub}\\
+Vienna, Austria \\
+heiler@csh.ac.at}
+\and
+\IEEEauthorblockN{2\textsuperscript{nd} Allan Hanbury}
+\IEEEauthorblockA{\textit{E-Commerce Group} \\
+\textit{TU Wien}\\
+Vienna, Austria \\
+allan.hanbury@tuwien.ac.at}
 %\and
 %\IEEEauthorblockN{1\textsuperscript{st} }
-\IEEEauthorblockA{\textit{Anonymus Authors}% \\
+%\IEEEauthorblockA{\textit{Anonymus Authors}% \\
 %\textit{Anonymus organization}\\
 %Anonymus Country \\
 %Anonymus email address
-}
+%}
 %\and
 %\IEEEauthorblockN{2\textsuperscript{nd} }
 %\IEEEauthorblockA{\textit{Anonymus}% \\
@@ -84,11 +89,11 @@
 
 \maketitle
 
-%\begin{abstract}
-%This document is a model and instructions for \LaTeX.
-%This and the IEEEtran.cls file define the components of your paper [title, text, heads, etc.]. *CRITICAL: Do Not Use Symbols, Special Characters, Footnotes, 
-%or Math in Paper Title or Abstract.
-%\end{abstract}
+\begin{abstract}
+This document is a model and instructions for \LaTeX.
+This and the IEEEtran.cls file define the components of your paper [title, text, heads, etc.]. *CRITICAL: Do Not Use Symbols, Special Characters, Footnotes, 
+or Math in Paper Title or Abstract.
+\end{abstract}
 
 %\begin{IEEEkeywords}
 %component, formatting, style, styling, insert
@@ -305,13 +310,12 @@ We compare the computational speed of various distributed spatial join implement
 %\end{center}
 %\end{table}
 
-\begin{figure}
-    \centering
-    \includegraphics[height=55mm]{img/log_plot.png}
-    \caption{load of users (x axis), processing time as average of 5 runs in logarithmic scale (y axis)}
-    \label{fig:results}
-
-\end{figure}
+\begin{figure*}
+%\tikz \draw [black] (0,0) rectangle (\linewidth,1cm);
+\centering\includegraphics[width=\linewidth]{images/line_white_log_200_True.png}
+\centering\mycaption{load of users (x axis), processing time as average of 5 runs in logarithmic scale (y axis)}
+\label{fig:results}
+\end{figure*}
 
 %\begin{center}
 %	\centering
