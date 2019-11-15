@@ -59,5 +59,13 @@ object OSMParser {
           acc.withColumn(columnName, col(OSMNode.tags).getItem(tagToParse))
       }
   }
+  def addAdditionalColumnsDummyCompatibility(
+      additionalColumns: Map[String, String])(df: DataFrame): DataFrame = {
+    additionalColumns
+      .foldLeft(df) {
+        case (acc, (columnName, tagToParse)) =>
+          acc.withColumn(columnName, lit(1))
+      }
+  }
 
 }

@@ -3,11 +3,17 @@ package at.csh.geoheil.poi
 
 import at.csh.geoheil.common.{SparkBaseRunner, SparkUtils}
 import at.csh.geoheil.common.config.SpatialUtilsAll
+import at.csh.geoheil.common.model.raw.OSMNode
+import at.csh.geoheil.common.provider.OSMRawProvider
 import at.csh.geoheil.common.transformer.io.IO
 import org.apache.spark.sql.{SaveMode, SparkSession}
 import pureconfig.generic.auto._
 import pureconfig.module.enumeratum._
 import at.csh.geoheil.common.transformer.DataFrameExt._
+import at.csh.geoheil.poi.OSMParser.{
+  addAdditionalColumns,
+  generateFilterCondition
+}
 
 object PoiEnrichmentBenchmark
     extends SparkBaseRunner[PoiEnrichmentBenchmarkConfiguration] {
@@ -19,12 +25,23 @@ object PoiEnrichmentBenchmark
   val DUMMY_DATA_LOCALITY_PATH_INPUT = "tmp_benchmark/dumm_locality_preserving"
   val DUMMY_DATA_RAW_INPUT = "tmp_benchmark/dumm_raw"
 
-  val desiredNodes = OSMParser
-    .loadOsmNodesAndFilterToDesiredKeys(c,
-                                        c.poiEnrichment.osmFilterTags,
-                                        c.poiEnrichment.osmAdditionalColumns)
-    .transform(SparkUtils.namedCache("pois"))
-
+  // optional block 1
+//  val desiredNodes = OSMParser
+//    .loadOsmNodesAndFilterToDesiredKeys(c,
+//                                        c.poiEnrichment.osmFilterTags,
+//                                        c.poiEnrichment.osmAdditionalColumns)
+//    .transform(SparkUtils.namedCache("pois"))
+  // optional block 2 XOR
+  // ***************
+  val combinedAdditionalColumns = c.poiEnrichment.osmAdditionalColumns ++ c.poiEnrichment.osmFilterTags
+    .map(e => (e._1, e._1))
+  val desiredNodes = OSMRawProvider
+    .provide(c)
+    .transform(OSMParser.addAdditionalColumnsDummyCompatibility(
+      combinedAdditionalColumns))
+    .drop(OSMNode.timestamp, OSMNode.version)
+    .drop(OSMNode.tags)
+  // ***************
   // TODO include multiple spark worker sizes and spatial partitioning variants
   val users = (1L to c.poiBenchmark.usersMax)
     .map(e => scala.math.pow(2.toDouble, e.toDouble).toLong)

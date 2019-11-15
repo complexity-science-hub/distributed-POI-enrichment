@@ -7,8 +7,7 @@ import at.csh.geoheil.common.transformer.io.{IO, PartitionTools}
 import org.apache.spark.sql.{DataFrame, SparkSession}
 
 object OSMRawProvider {
-  def provide(c: OSMRawConfiguration)(
-      implicit spark: SparkSession): DataFrame = {
+  def provide(c: OSMRawConfiguration)(implicit spark: SparkSession): DataFrame = {
     val node = IO
       .readPrefixedParquetFile(c.osmNode)
       .select(
