@@ -38,12 +38,12 @@ object WorkloadGenerator {
                 .alias(UserSpecificEvent.periods))
     val enrichedWithEvents =
       dummyUser.transform(WorkloadGenerator.enrichEvents(c))
+    enrichedWithEvents.cache
     IO.writeParquet(enrichedWithEvents,
                     DUMMY_DATA_LOCALITY_PATH_INPUT,
                     SaveMode.Overwrite)
-    val enrichedWithEventsDisk = spark.read.parquet(DUMMY_DATA_LOCALITY_PATH_INPUT)
     IO.writeParquet(
-      enrichedWithEventsDisk
+      enrichedWithEvents
         .transform(SqlTools.explodeDf(UserSpecificEvent.events))
         .transform(
           StructTypeHelpers.unpackSingleLevelStruct(UserSpecificEvent.events)),
