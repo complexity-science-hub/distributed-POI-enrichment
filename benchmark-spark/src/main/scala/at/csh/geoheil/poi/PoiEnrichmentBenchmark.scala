@@ -26,21 +26,21 @@ object PoiEnrichmentBenchmark
   val DUMMY_DATA_RAW_INPUT = "tmp_benchmark/dumm_raw"
 
   // optional block 1
-//  val desiredNodes = OSMParser
-//    .loadOsmNodesAndFilterToDesiredKeys(c,
-//                                        c.poiEnrichment.osmFilterTags,
-//                                        c.poiEnrichment.osmAdditionalColumns)
-//    .transform(SparkUtils.namedCache("pois"))
+  val desiredNodes = OSMParser
+    .loadOsmNodesAndFilterToDesiredKeys(c,
+                                        c.poiEnrichment.osmFilterTags,
+                                        c.poiEnrichment.osmAdditionalColumns)
+    .transform(SparkUtils.namedCache("pois"))
   // optional block 2 XOR
   // ***************
-  val combinedAdditionalColumns = c.poiEnrichment.osmAdditionalColumns ++ c.poiEnrichment.osmFilterTags
-    .map(e => (e._1, e._1))
-  val desiredNodes = OSMRawProvider
-    .provide(c)
-    .transform(OSMParser.addAdditionalColumnsDummyCompatibility(
-      combinedAdditionalColumns))
-    .drop(OSMNode.timestamp, OSMNode.version)
-    .drop(OSMNode.tags)
+//  val combinedAdditionalColumns = c.poiEnrichment.osmAdditionalColumns ++ c.poiEnrichment.osmFilterTags
+//    .map(e => (e._1, e._1))
+//  val desiredNodes = OSMRawProvider
+//    .provide(c)
+//    .transform(OSMParser.addAdditionalColumnsDummyCompatibility(
+//      combinedAdditionalColumns))
+//    .drop(OSMNode.timestamp, OSMNode.version)
+//    .drop(OSMNode.tags)
   // ***************
   // TODO include multiple spark worker sizes and spatial partitioning variants
   val users = (1L to c.poiBenchmark.usersMax)
