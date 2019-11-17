@@ -152,10 +152,12 @@ All simulated locations are within Austria.
 Initially, the data resides in a trajectory optimized locality preserving format suitable for various trajectory analyses, but without the POIs.
 
 \begin{figure*}
-%\tikz \draw [black] (0,0) rectangle (\linewidth,1cm);
+%%%%%%%%%%%%%%%%%% TODO
+% Do these correspond to the (1), (2) and (3) on the previous page. The correspondence between these headings and what is written there is not immediately clear for all points.
 \centering\includegraphics[width=\linewidth]{images/line_white_log_200_True_3.png}
-%\centering\mycaption{load of users (x axis), processing time as average of 5 runs in logarithmic scale (y axis)}
-\centering\caption{Configuration (1): 200 events per user per period for 3 periods. Load of users (x axis), processing time as average of 5 runs in logarithmic scale (y axis)}
+\centering\caption{Configuration (1): 200 events per user per period for 3 periods. Load of users (x axis), processing time as average of 5 runs in logarithmic scale (y axis)
+for the 3 different implementations of a spatial join.
+}
 \label{fig:results}
 \end{figure*}
 
@@ -197,20 +199,13 @@ Also we note that (2) generates a fairly large amount of shuffle IO when reconst
 % How do we see this on the plot?
 
 Configuration (3): Figure \ref{fig:more_periods} depicts that when increasing the load to 300 periods (1) and (2) converge.
-%(about 90GB of gzipped parquet events are generated for 1024 users totalling to more than 90 million events .
-This means that the overhead of shuffling for disaggregation and later re-aggregation is neglectable from a time perspective, though it causes several 100GB of shuffle IO.
+This means that the overhead of shuffling for disaggregation and later re-aggregation is neglectible from a time perspective, though it causes several 100GB of shuffle IO.
 (3) the best methodology for this load during the whole load window of this configuration and as a side benefit is not causing shuffle IO.
 
-Configuration (4): is very specific as a high number of POI overlap.
-%%%%%%%%%%%%%%%%%%%% TODO
-% with what overlap
+Configuration (4): is very specific as a high number of POI are within close proximity of each other.
 Therefore spatial partitioning is applied on the POI not on the trajectory dataset.
-%%%%%%%%%%%%%%%%%%%% TODO 
-% what does this large joined result mean?
-Already for a minimal workload, large number of joinable POI are found. Methodology (3) is not
-%%%%%%%%%%%%%%%%%%%% TODO
-% What does this mean? Which query? does not complete
- suitable here as the query does not complete. During the first phase when collecting the nodes into the master node.
+Already for a minimal workload, large number of joinable POI are found returning a large number of tuples.
+Methodology (3) is not suitable for this operation as it does not complete. During the first phase when collecting the nodes into the master node.
 For this configuration a distributed spatially partitioned join is the
 %%%%%%%%%%%%%%%%%%%% TODO
 % So is this a new methodology not described yet? It is not well described here. The title on Figure 4 is "(3) Locality Preserving", which seems to contradict this paragraph. 
@@ -222,7 +217,6 @@ In this dataset any personal identifying information has been anonymized.
 Here the opposite of configuration (4) is observed. The distributed implementation runs for more than 5 hours and does not complete.
 Our broadcast spatial join finishes within 10 minutes and is not causing any shuffle IO.
 
-% TODO discuss if we limit the data which is displayed to show all the runs
 %%%%%%%%%%%%%%%%%%% TODO
 % What is this? Do you mean "maximum user load"?
 Due to resource limitations we unfortunately do not have the same number of load available for all simulation runs.
@@ -233,23 +227,9 @@ Due to resource limitations we unfortunately do not have the same number of load
 \end{figure}
 \begin{figure}%[htbp]
 \centerline{\includegraphics[width=\linewidth ]{images/line_white_log_200_True_300.png}}
-\caption{Confgiuration (3): 200 events per user per period. Increased number of periods 300. Load of users (x axis), processing time as average of 5 runs in logarithmic scale (y axis)}
+\caption{Configuration (3): 200 events per user per period. Increased number of periods 300. Load of users (x axis), processing time as average of 5 runs in logarithmic scale (y axis)}
 \label{fig:more_periods}
 \end{figure}
-%%%%%%%%%%%%%%%%%% TODO
-% Do these correspond to the (1), (2) and (3) on the previous page. The correspondence between these headings and what is written there is not immediately clear for all points. 
-% Put the number of events per user in each caption, to avoid too much searching around by the reader. 
-% Are these the "Configurations" described on the previous page?
-% Vague. Put the exact number. 
-%xxxxxxxxxxxxxxxx
-% I don't understand this. Methodologies (1) and (2) don't appear in Figure 4. 
-% Not clear what this is. Never mentioned before. 
-%When contrasting the speed of methodology (3) for configurations (1) and (2) in Figure \ref{fig:_comparison} a log-linear scalability for increased number of events is reported.
-%\begin{figure}%[htbp]
-%\centerline{\includegraphics[width=\linewidth ]{images/run_comparison_(3) LocalityPreserving_True_3.png}}
-%\caption{Comparing the custom methodology for multiple event sizes per user}
-%\label{fig:_comparison}
-%\end{figure}
 
 \section{Summary}
 Various use cases require different implementations for distributed spatial joins.

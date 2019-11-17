@@ -288,7 +288,13 @@ object PoiEnrichmentBenchmarkService {
       performLocalityPreservingSpatialJoin(rawChain.map(Event.fromRow))
     }
     val localityPreservingPOIEnrichmentUDF = udf(poiEnrichment _)
-    val poiEnriched = tripChain.withColumn(
+    // geospark is exploding = repartitioning the dataset. this gives it an unfair advantage
+    // need to correct here so that more partitions are loaded by default for broadcast spatial join
+    // but correct it in memory!!!
+    val first = userLoad * 300
+    val second = userLoad * 30
+    val
+    val poiEnriched = tripChain.repartition(user_load * 300).withColumn(
       "enhanced",
       localityPreservingPOIEnrichmentUDF(col(UserSpecificEvent.events)))
     //    poiEnriched.show
