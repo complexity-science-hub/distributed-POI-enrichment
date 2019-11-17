@@ -40,7 +40,7 @@ object WorkloadGenerator {
       dummyUser.transform(WorkloadGenerator.enrichEvents(c))
     // geospark is exploding = repartitioning the dataset. this gives it an unfair advantage
     // need to correct here so that more partitions are loaded by default for broadcast spatial join
-    IO.writeParquet(enrichedWithEvents.repartition(users.toInt),
+    IO.writeParquet(enrichedWithEvents.repartition(users.toInt *300),
                     DUMMY_DATA_LOCALITY_PATH_INPUT,
                     SaveMode.Overwrite)
 
