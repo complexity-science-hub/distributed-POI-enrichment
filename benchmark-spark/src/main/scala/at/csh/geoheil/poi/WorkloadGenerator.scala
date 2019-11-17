@@ -38,9 +38,12 @@ object WorkloadGenerator {
                 .alias(UserSpecificEvent.periods))
     val enrichedWithEvents =
       dummyUser.transform(WorkloadGenerator.enrichEvents(c))
-    IO.writeParquet(enrichedWithEvents,
+    // geospark is exploding = repartitioning the dataset. this gives it an unfair advantage
+    // need to correct here so that more partitions are loaded by default for broadcast spatial join
+    IO.writeParquet(enrichedWithEvents.repartition(users.toInt),
                     DUMMY_DATA_LOCALITY_PATH_INPUT,
                     SaveMode.Overwrite)
+
     val enrichedWithEventsDisk = spark.read.parquet(DUMMY_DATA_LOCALITY_PATH_INPUT)
     IO.writeParquet(
       enrichedWithEventsDisk
