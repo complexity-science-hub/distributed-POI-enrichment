@@ -2,6 +2,7 @@
 \IEEEoverridecommandlockouts
 % The preceding line is only needed to identify funding in the first footnote. If that is unneeded, please comment it out.
 %\usepackage{cite}
+\usepackage{enumitem}
 \usepackage[backend=biber,firstinits=true,citestyle=ieee]{biblatex} 
 %https://texblog.org/2012/08/29/changing-the-font-size-in-latex/
 \renewcommand*{\bibfont}{\tiny}
@@ -22,13 +23,17 @@
   \maps{
     \map{
       %\step[fieldset=doi, null]
-      \step[fieldset=url, null]
+      %\step[fieldset=url, null]
       \step[fieldset=eprint, null]
       \step[fieldset=eprinttype, null]
       \step[fieldset=arxivId, null]
       \step[fieldset=archivePrefix, null]
       \step[fieldset=issn, null]
       \step[fieldset=isbn, null]
+    }
+    \map{
+      \pernottype{misc} % only if type is not misc
+      \step[fieldset=url, null] % delete field
     }
   }
 }
@@ -70,12 +75,12 @@ allan.hanbury@tuwien.ac.at}
 \maketitle
 
 \begin{abstract}
-As an increasing number of sensor devices (internet of things) is used, more and more spatio-temporal data becomes available.
-Being able to process and analyze large quantities of such datasets therefore is critical.
-Spatial joins in classic geo information systems do not scale well. Distributed implementations promise to do so.
-There are various implementation variants for distributed spatial joins.
-Some are only suitable for specific use cases.
-We compare broadcast and multiple variants of a distributed spatially partitioned join.
+As an increasing number of sensor devices (Internet of Things) is used, more and more spatio-temporal data becomes available.
+Being able to process and analyze large quantities of such datasets is therefore critical.
+Spatial joins in classical geo-information systems do not scale well.
+Nevertheless, distributed implementations are promising to solve this.
+Various implementation variants for distributed spatial joins are documented in literature, with some being only suitable for specific use cases.
+We compared broadcast and multiple variants of a distributed spatially partitioned join.
 We anticipate that this comparison will give guidance to when to use which implementation strategy.
 \end{abstract}
 
@@ -84,162 +89,155 @@ Spatial databases and GIS, Data Architecture, Distributed databases
 \end{IEEEkeywords}
 
 \section{Introduction}
-The internet of things (IOT) is the next step in the evolution of the internet \cite{Lin2017}.
-A large quantity of sensors will be networked and generate a huge amount of data.
-Also 5G, as the new mobile phone network standard currently rolling out in various countries, with many small cells (micro cells) will generate more data than previous versions of the mobile phone network.
-In both cases processing an exploding amount of  data, often times in the spatio-temporal domain, is of importance for use cases such as urban planning, location based advertising, recommendation of points of interest (POI), or socio-economic analyses.
+The Internet of Things (IoT) is the next step in the evolution of the internet \cite{Lin2017}, where a large quantity of sensors will be networked and generate a huge amount of data.
+Also 5G, as the new mobile phone network standard currently rolling out in various countries with many small cells (micro cells) will generate more data than previous versions.
+In both cases processing at rapidly increasing amount of data is important.
+Many use cases like urban planning, location-based advertising, recommendation of points of interest (POI), or socio-economic analyses require data in the spatio-temporal domain.
 
-One frequently used spatial operation is the spatial join. 
-A naïve spatial join is computationally expensive when performing a spatial enrichment on large quantities of data. Traditional geospatial information system (GIS) tools like PostGIS\footnote{\url{https://postgis.net/}} do offer such spatial processing capabilities,
+One of the most frequently used spatial operations is the spatial join. 
+A naïve implementation is computationally expensive when performing a spatial enrichment on large quantities of data. Traditional geospatial information system (GIS) tools like PostGIS\footnote{\url{https://postgis.net/}} offer such spatial processing capabilities,
 however their processing power is limited as they are usually bound to a single node.
-In the Hadoop ecosystem, scaling computation beyond one machine up to thousands is possible.
-The distributed architecture is only effective when blocking network traffic is minimised. For 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% TODO
-% Is it clear to all what this is? - I think that a short explanation would be good. 
-example, the cross product of a naïve spatial join would still be slow.
-Achieving the desired level of scalability is possible using frameworks like spatial Hadoop \cite{Eldawy2015}.
-However, based on classical map reduce, queries are slow and also inherit all the complexity from operationalizing Hadoop.
+In the Hadoop ecosystem it is possible to scale computation up to thousands of machines.
+The distributed architecture is only effective when network traffic is minimized.
+A naïve distributed implementation utilizing a cross-product would still be slow.
+Before filtering to the relevant results according to a spatial predicate (intersection, overlap, ...) the intermediate state which is required to be exchanged between compute nodes, is very large as all tuples on the left side are paired with all tuples from the right side. 
+Using frameworks like Spatial Hadoop \cite{Eldawy2015}, it is possible to achieve the desired level of scalability.
+However, based on classical map reduce, queries are slow and also inherit the complexity from operationalizing Hadoop.
 Apache Spark is a popular, fast and scalable in-memory computation framework \cite{Zaharia2012}.
-Today it is sometimes used without Hadoop in the cloud. 
-This makes Spark more accessible for new-comers.
-Spark, like many distributed computing frameworks, is still based on the map-reduce paradigm where computation is split into chunks and processed in parallel on multiple nodes.
-One master coordinates many worker nodes to scale out computation.
-What makes Spark improve upon the old implementation though is the usage of resilient distributed datasets (RDD), which behave similarly to a local Java or Scala collection.
-Instead of writing to disk between each step of a query, Spark transfers data in memory.
-Unlike classical map-reduce code, RDDs offer higher level operations like a filter, join or groupBy operation through a simple API.
-In case of failure of a compute node, missing data are recomputed.
+It is sometimes used without Hadoop in the cloud to make Spark more accessible for new-comers.
+Spark - like many distributed computing frameworks - is still based on the map-reduce paradigm where computation is split into chunks and processed in parallel on multiple nodes.
+%One master node coordinates many worker nodes to scale out computation.
+Spark is not only faster than classical map-reduce, but also offers a higher level API mimicking a local collection object with operations like \emph{filter}, \emph{join}, or \emph{groupBy}.
+RDDs are immutable and state which is lost can be recomputed.
+Spark achieves speed by transferring data in memory and not writing to disk between each step of a query.
 %%%%%%%%%%%%%% TODO drop this sentence to get more space
-With the addition of Spark-SQL, a graph of operations which should be executed even allows for  optimization to improve query performance.
+With the addition of Spark-SQL, a graph of operations to be executed even allows for  optimization to improve query performance.
 
-However, out of the box no support for spatial data types, queries or most importantly spatial indices is built into Spark.
-Multiple frameworks are readily available to perform distributed spatial operations \cite{Tangy2015, Yu2017, Xie2016, Yu2019} or Magellan\footnote{https://github.com/harsha2010/magellan} using Spark.
-A detailed comparison of these systems can be found in \cite{Yu2019, Garcia-Garcia2017}.
-With at the time of writing 587 stars on gitHub, GeoSpark \cite{Yu2015} is very popular, has a large community.
-Therefore we choose this framework as the basis for our comparison.
-Similarly to the others, its implementation is based on spatial partitioning.
-The idea is that gigantic spatial datasets should be joinable.
-In order to efficiently perform this task exchanging data over the network (shuffling) is mandatory to colocate tuples which are close in the spatial domain.
-This enables fast local queries of a spatial index for each partition.
+However, no native support for spatial data types, queries, or most importantly spatial indices is built into Spark.
+Multiple frameworks are readily available to perform distributed spatial operations using Spark \cite{Tangy2015, Yu2017, Xie2016, Yu2019, Harsha2010}.
+A detailed comparison of these systems can be found in \cite{Yu2019} and \cite{Garcia-Garcia2017}.
+With currently 587 stars on gitHub\footnote{\url{https://github.com/DataSystemsLab/GeoSpark}}, GeoSpark \cite{Yu2015} has a large community.
+Therefore, we chose it as the basis for our comparison.
+Its implementation is based on spatial partitioning, thus providing the possibility to join large spatial datasets.
+Exchanging data over the network (shuffling) is mandatory to colocate tuples which are close in the spatial domain and to enable fast local queries of a spatial index for each partition.
 
-Not all use cases require two large datasets. One example could be trajectory data.
-Accessing neighbours in the time and space domain is relevant for various trajectory related 
-%########################## TODO
-% Maybe explain these briefly. 
-computations like smoothing or clustering.
+Accessing neighbours in the time and space domain is relevant for various trajectory-related 
+computations like smoothing/noise reduction or clustering.
 These tasks are only efficient if local data, i.e. data which resides on the same node, is accessed when querying for neighbours.
-
+Not all use cases require two large datasets.
 When working with trajectories we propose a faster methodology for enrichment of spatial data which requires less network traffic and is thus faster. Our contribution is twofold:
 \begin{itemize}
-  \item We compare various variants of a distributed spatial join. In particular, data-locality preserving and non-data-locality preserving methodologies are contrasted.
-  \item We introduce a broadcast (map-side) spatial join broadcasting the spatial index which is well suited for enrichment of a large dataset with small to medium sized metadata.
+  \item First, we compared various variants of a distributed spatial join. In particular, data-locality-preserving and non-data-locality-preserving methodologies were juxtaposed.
+  \item Second, we introduced a broadcast (map-side) spatial join. It is well suited for enrichment of a large dataset with small to medium sized metadata, as the small dataset is copied to all the nodes. In a second step, a local join is performed for each partition.
 \end{itemize}
 
-\section{Experiment setup}
-%%%%%%%%%%%%%%%%%%%%%%%% TODO
-% Sounds a bit arbitrary. Maybe call this the case under consideration, and justify why it is interesting to do. 
-We want to enrich spatial trajectories with close POI. For this, a spatial join is used.
+\section{Experimental setup}
+We investigated the enrichment of spatial trajectories with close POI using a spatial join.
+The data was used to better understand recurrent patterns in trajectory data e.g., for classification of activity.
 %%%%%%%%%%%%%%%%%%%%%%%% TODO
 % It would be good to say what sort of data is simulated - what is obtained from mobile phones. 
-The data is simulated and an exponentially increasing load of users is generated for multiple periods.
+The data was simulated and an exponentially increasing load of users was generated for multiple periods.
 %%%%%%%%%%%%%%%%%%%%%%%% TODO
 % More detail is needed on this. Is the "time period" always a day? Why is it important? In the experiments "3 periods" are used - are these the time periods? Why are they important for the experiments?
-For each user id, time period (date) and a data locality preserving array of events (time, 
-%%%%%%%%%%%%%%%%%%%%%%%% TODO
-% Accuracy This should be explained more. 
-latitude, longitude, accuracy) is stored.
-All simulated locations are within Austria.
-%This totals to more than 78Million events.
-Initially, the data resides in a trajectory optimized locality preserving format suitable for various trajectory analyses, but without the POIs.
+For each user, time period (date) and a data locality-preserving array of events (time, 
+latitude, longitude, accuracy (uncertainty of localization)) were stored partitioning the data per date as this allows effortless calculation of trajectory operations per group and easy addition of new data.
+All simulated locations were within Austria.
+Initially, the data resided in a locality-preserving format suitable for various trajectory analyses, but without the POIs.
 
 \begin{figure*}
 %%%%%%%%%%%%%%%%%% TODO
 % Do these correspond to the (1), (2) and (3) on the previous page. The correspondence between these headings and what is written there is not immediately clear for all points.
 \centering\includegraphics[width=\linewidth]{images/line_white_log_200_True_3.png}
-\centering\caption{Configuration (1): 200 events per user per period for 3 periods. Load of users (x axis), processing time as average of 5 runs in logarithmic scale (y axis)
-for the 3 different implementations of a spatial join.
+\centering\caption{Configuration (1): 200 events per user per period for 3 periods. Load of users (x axis), processing time shown in logarithmic scale (y axis)
+for the 3~different implementations of a spatial join. Each one was run 5 times. The graph shows the mean and 95 confidence intervals as error bars.
 }
 \label{fig:results}
 \end{figure*}
 
-We conduct our experiments on a Hadoop cluster using Spark version 2.2 on yarn on 37 containers
- using 4 cores each and 55GB of RAM per worker node totalling up to 145 cores. POIs are derived from the open street map (OSM) project as a subset with certain filter criteria.
+We conducted our experiments on a Hadoop cluster using Spark version 2.2 on yarn with 37 containers using 4 cores each and 55GB of RAM per worker node totalling up to 145 cores. 
+POIs were derived from the open street map (OSM) project as a subset with certain filter criteria.
 
-We compare the computational speed of various distributed spatial join implementations. Three methodologies were implemented: 
+We compared the computational speed of various distributed spatial join implementations utilizing three methodologies: 
 \begin{enumerate}
-  \item GeoSpark framework in a non-data locality preserving way. Time to unnest the dataset is not counted, only a default inner join is performed, no re-aggregation to the original locality preserving format (i.e. the least overhead when using out of the box tools to perform scalable spatial enrichment)
-  \item GeoSpark in a data locality preserving way: the data initially fed to the spatial join is unnested such that each observation from the array forms a new row. A left join is added manually as GeoSpark does not offer such an operation and we do not want to lose observations. Finally the data is compacted again to allow for further processing in the data locality optimized representation, i.e. it is aggregated for each user and period to contain the original array of events. But now additional fields with information about the joined POI are present
-  %%%%%%%%%%%%%%%%%%%% TODO
-  % As you don't say above how many POI are used, increasing them doesn't give any additional information. Also say increasing them by how much. 
-  \item Data locality preserving method consisting of a spatial index (R-tree), created from the POI data which is distributed to all the worker nodes, thus the join can be performed without accessing the network locally on each partition of the data
+  \item GeoSpark framework in a non-data locality-preserving way. Time to un-nest the dataset was not counted, only a default inner join was performed, no re-aggregation to the original locality-preserving format (i.e., the least overhead when using out of the box tools to perform scalable spatial enrichment).
+  \item GeoSpark in a data locality-preserving way. The data initially fed to the spatial join was un-nested in a way that each observation from the array formed a new row. A left join was added manually as GeoSpark does not offer such an operation and we did not want to lose observations. Finally, the data was compacted again to allow for further processing in the data locality optimized representation. In more detail, data was aggregated for each user and period to contain the array of events with information about the joined POI.
+  \item Our proposed data locality-preserving method consisting of a spatial index (R-tree) created from the POI data which is distributed to all the worker nodes.
+  Thus the join is performed without accessing the network locally on each partition of the data.
 \end{enumerate}
 
-These are compared in the following configurations:
+The above mentioned methodologies were compared using the following configurations.
+Our code is available on gitHub\footnote{\url{https://github.com/complexity-science-hub/distributed-POI-enrichment}}.
 %%%%%%%%%%%%%%%%%%% TODO
 % Does it make sense to discuss which is the most realistic case for a mobile phone network?
-\begin{enumerate}
-	\item 200 events per period and user and 3 periods
-	\item 2000 events per period and user and 3 periods
+\begin{enumerate}[label=(\alph*)]
+	\item 200 events per period and user and 3 periods, 9.8k POI
+	\item 2000 events per period and user and 3 periods, 9.8k POI
 	%%%%%%%%%%%% TODO
 	% are these periods the time periods
-	\item 200 events per period and user and 300 periods
-	\item 200 events per period and user and increased number of POI. Using all OSM POI for Austria
+	\item 200 events per period and user and 300 periods, 9.8k POI
+	\item 200 events per period and user and increased number of POI to 65.1 Million. Using all OSM POI for Austria.
 \end{enumerate}
 
 \section{Results}
-Configuration (1): As seen in Figure \ref{fig:results}, for large enough quantities of data, the locality preserving GeoSpark join (2) is faster than the non-preserving approach (1).
-This is particularly surprising as the amount of data being shuffled is larger in the second case as an explode, left join and aggregation happens for the locality preserving distributed GeoSpark join.
-In almost all cases the custom implementation (3) using a map-side broadcast join is optimal,
-although in extreme cases the advantage of (3) diminishes.
+Configuration (a): As indicated in Figure \ref{fig:results}, the locality-preserving GeoSpark join (2) is faster than the non-preserving approach (1) for large-enough quantities of data.
+This is particularly surprising as considering the larger amount of data being shuffled in the locality-preserving distributed GeoSpark join for: un-nesting, left join and aggregation.
+In almost all cases the custom implementation (3) using a map-side broadcast join was optimal,
+although in extreme cases the advantage of (3) diminished.
 
 %%%%%%%%%%%%%%%%%%% TODO
 % This sounds like this is what is plotted on the X-axis, but this is not the case. The number of events is fixed,so state the number here. 
-Configuration (2): When increasing the number of events per user, Figure \ref{fig:more_events} clearly depicts a more expected result concerning (1) and (2) where the latter is slower.
-Also we note that (2) generates a fairly large amount of shuffle IO when reconstructing the trajectory optimized format.
+Configuration (b): When the number of events per user and period was increased, we obtained a more expected result concerning (1) and (2) where the latter was slower, as indicated in Figure \ref{fig:more_events}.
+We also noted that (2) generated a fairly large amount of shuffle IO when reconstructing the trajectory optimized format.
 %%%%%%%%%%%%%%%%%%% TODO
 % How do we see this on the plot?
 
-Configuration (3): Figure \ref{fig:more_periods} depicts that when increasing the load to 300 periods (1) and (2) converge.
+Configuration (c): As seen in Figure \ref{fig:more_periods}, (1) and (2) converge when  increasing the load to 300 periods.
 This means that the overhead of shuffling for disaggregation and later re-aggregation is neglectible from a time perspective, though it causes several 100GB of shuffle IO.
-(3) the best methodology for this load during the whole load window of this configuration and as a side benefit is not causing shuffle IO.
+Methodology (3) was the fastest variant.
+As an additional benefit no shuffle IO was caused.
 
-Configuration (4): is very specific as a high number of POI are within close proximity of each other.
-Therefore spatial partitioning is applied on the POI not on the trajectory dataset.
-Already for a minimal workload, large number of joinable POI are found returning a large number of tuples.
-Methodology (3) is not suitable for this operation as it does not complete. During the first phase when collecting the nodes into the master node.
-For this configuration a distributed spatially partitioned join is the
+Configuration (d): (d) was considered very specific as a high number of POI were within close proximity of each other.
+In this case more POI than trajectory points are present for small to medium sized workloads.
+Therefore, only in this case spatial partitioning was applied on the POI, not on the trajectory dataset.
+A  minimal workload already returned a large number of tuples.
+Methodology (3) was not suitable as it did not finish.
+%During the first phase when collecting the nodes into the master node.
+For this configuration, a distributed spatially partitioned join was the
 %%%%%%%%%%%%%%%%%%%% TODO
 % So is this a new methodology not described yet? It is not well described here. The title on Figure 4 is "(3) Locality Preserving", which seems to contradict this paragraph. 
-better option as each individual event already generates a large number of tuples and the parallelism is higher this way resulting in smaller resource requirements compared to (3) and thus the completion of the queries.
+only option as each individual event already generated a large number of tuples and the parallelism was higher, resulting in smaller resource requirements compared to (3) and thus the completion of the queries.
 
-Finally we additionally compared the broadcast spatial join with GeoSpark distributed join on a real dataset.
-It consists of call data record (CDR) data for 6.37 Million users for a duration of 11 days.
-In this dataset any personal identifying information has been anonymized.
-Here the opposite of configuration (4) is observed. The distributed implementation runs for more than 5 hours and does not complete.
-Our broadcast spatial join finishes within 10 minutes and is not causing any shuffle IO.
+Experimentation on a real dataset e.g. from a telecommunication provider is still required.
+%Finally, we additionally compared the broadcast spatial join with GeoSpark distributed join on a real dataset
+%%%%%%%%%%%%%%%%%%%%% TODO
+% Discuss what is needed
+%which consisted of call data record (CDR) data from 6.37 Million users for a duration of 11 days.
+%Any personally identifying information had been anonymized before.
+%Interestingly, we observed the opposite of configuration (4). The distributed implementation was running for more than 5 hours and still did not finish.
+%Our broadcast spatial join completed within 10~minutes and was not causing any shuffle IO.
 
 %%%%%%%%%%%%%%%%%%% TODO
 % What is this? Do you mean "maximum user load"?
-Due to resource limitations we unfortunately do not have the same number of load available for all simulation runs.
+%Due to resource limitations we unfortunately do not have the same number of load available for all simulation runs.
 \begin{figure}%[htbp]
 \centerline{\includegraphics[width=\linewidth ]{images/line_white_log_2000_True_3.png}}
-\caption{Configuration (2): increased number of events per user to 2000 events per period for 3 periods. Load of users (x axis), processing time as average of 5 runs in logarithmic scale (y axis)}
+\caption{Configuration (2): increased number of events per user to 2000 events per period for 3 periods. Load of users (x axis), processing time shown in logarithmic scale (y axis). For each methodology 5 runs were computed. The graph shows the mean and 95 confidence intervals as error bars}
 \label{fig:more_events}
 \end{figure}
 \begin{figure}%[htbp]
 \centerline{\includegraphics[width=\linewidth ]{images/line_white_log_200_True_300.png}}
-\caption{Configuration (3): 200 events per user per period. Increased number of periods 300. Load of users (x axis), processing time as average of 5 runs in logarithmic scale (y axis)}
+\caption{Configuration (3): 200 events per user per period. Increased number of periods to 300. Load of users (x axis), processing time as shown in logarithmic scale (y axis). For each methodology 5 runs were computed. The graph shows the mean and 95 confidence intervals as error bars}
 \label{fig:more_periods}
 \end{figure}
 
 \section{Summary}
 Various use cases require different implementations for distributed spatial joins.
-A general purpose framework like GeoSpark is useful but sometimes a more specific implementation like methodology (3), the broadcast spatial join, proves more efficient.
-This is especially relevant for scenarios where shuffle IO needs to be minimized like in a real time streaming computation or when the  spatial enrichment includes up to medium sized number of tuples.
-Further improvements could be made by fine tuning Spark itself, i.e. fine tuning parallelism.
-In the future, a discretized spatial index like H3 from Uber\cite{uber_h3} could yield even more improvements, especially concerning event data as such a trajectory POI enrichment could be preöcomputed for all available hexagons of a specific resolution for a country.
-
-
-Our code is available on gitHub\footnote{\url{https://github.com/complexity-science-hub/distributed-POI-enrichment}}.
+A general purpose framework like GeoSpark is useful, however, we observed that sometimes a more specific implementation, like methodology (3), the broadcast spatial join, proved more efficient.
+This property is particularly useful in scenarios where shuffle IO needs to be minimized, e.g., 
+ a real-time streaming computation or cases in which the spatial enrichment includes up to medium-sized (10k-100k) number of tuples.
+Fine-tuning Spark itself, i.e., setting the right level of parallelism might improve future approaches.
+In the future, a discretized spatial index like \cite{uber_h3} could yield even more improvements, especially concerning event data as it would be possible to precompute a  enrichment for all available raster cells of a specific resolution for a country and then applied very fast to new incoming data.
+Additionally validation on a real world dataset like a mobile telecommunication dataset should be performed.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % glossary
