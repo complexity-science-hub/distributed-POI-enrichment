@@ -1,5 +1,7 @@
 # spark mobility
 
+**Preprint** available at https://georgheiler.com/publication/ieee-bigdata-19/
+
 Scalable mobility analytics toolkit in spark.
 
 Capabilities:
